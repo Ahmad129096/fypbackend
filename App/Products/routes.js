@@ -1,15 +1,17 @@
 const express = require('express');
 const Controller = require('./controller');
 
+const middleware = require('../../Functions/middlewares');
+
 const router = express.Router();
 
-router.post('/', Controller.Create);
-router.get('/', Controller.List);
-router.get('/home', Controller.ProductForHome);
-router.get('/category', Controller.ProductsByCategory);
-router.get('/:id', Controller.Read);
-router.patch('/:id', Controller.Update);
-router.delete('/:id', Controller.Delete);
+router.post('/', middleware.adminAuthentication ,Controller.Create);
+router.get('/', middleware.authentication, Controller.List);
+router.get('/home', middleware.authentication, Controller.ProductForHome);
+router.get('/category', middleware.authentication, Controller.ProductsByCategory);
+router.get('/:id', middleware.authentication, Controller.Read);
+router.patch('/:id', middleware.adminAuthentication, Controller.Update);
+router.delete('/:id', middleware.adminAuthentication, Controller.Delete);
 
 
 module.exports = router;
