@@ -43,7 +43,6 @@ app.use(session({
 
 app.use('/api/users', Routes.users);
 app.use('/api/admin', Routes.admins);
-app.use('/api/agents', Routes.agents );
 app.use('/api/categories', Routes.categories );
 app.use('/api/collections', Routes.collections );
 app.use('/api/products', Routes.products );
