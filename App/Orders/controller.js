@@ -10,50 +10,36 @@ environment.config();
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
 module.exports = {
     Create: async (req, res) => {
         try {
             let order = {}, user = {};
             const items = [];
             let amount = 0;
-            req.body.items.forEach(item => {
+            for (const item of req.body.items) {
+                const product = await Products.findOne({_id: item.productId});
                 items.push({
-                    product: item.product._id,
+                    product: item.productId,
                     quantity: item.quantity
                 });
-                amount += item.product.price * item.quantity
-            });
-            user = await Users.findOne({ email: req.decoded._id });
+                amount += product.price * item.quantity
+            }
+            user = await Users.findOne({ _id: req.decoded._id });
             order = await Orders.create({
                 items: items,
                 user: user._id,
                 amount: amount
             });
-            req.body.items.forEach(async (item) => {
-                await Products.updateOne({ _id: item.product._id }, {
+            for (const item of req.body.items) {
+                const product = await Products.findOne({_id: item.productId});
+                await Products.updateOne({ _id: item.productId }, {
                     $set: {
-                        stock: item.product.stock - item.quantity
+                        stock: product.stock - item.quantity
                     }
-                });
-            });
-
-            let message = '<div style="display: flex; justify-content: center;">';
-            message = '<div style="border-radius: 8px; background-color: #fff; padding: 20px 30px; text-align: center; box-shadow: 0px 9px 27px 0px rgba(0, 0, 0, 0.16); margin-top: 10px; max-width: 400px;">'
-            message += '<h2 style="font-weight: 700; text-decoration: underline; text-align:center">Welcome to Perfume App</h2><br>';
-            message += `<h3><b>Dear ${user.name}!</b></h3><br>` +
-                `<p style="text-align: left;">Thank you for placing your order on Perfume App. Our team will process your order and contact you via email for further procedure.</p>`;
-            message += '<br><p style="text-align: left;"><b>Regards:</b></p><br><p>PERFUME APP</p><br>';
-            message += '</div>'
-
-            const msg = {
-                to: user.email,
-                from: process.env.SENDER_EMAIL,
-                subject: `PERFUME APP: Order Confirmation ${user.name}`,
-                text: message,
-                html: message
-            };
-            await sgMail.send(msg);
-
+                });   
+            }
             return res.status(200).json({
                 status: 'Successful',
                 message: 'Order successfully placed',
@@ -89,7 +75,7 @@ module.exports = {
             await Orders.updateOne({ _id: id }, {
                 $set: req.body
             });
-            const order = await Orders.findOne({_id: id});
+            const order = await Orders.findOne({ _id: id });
             return res.status(200).json({
                 status: 'Successful',
                 message: 'Successfully updated order',
@@ -137,40 +123,13 @@ module.exports = {
             const id = req.params.id;
             const order = await Orders.findOne({ _id: id });
             if (order) {
-                await Orders.updateOne({_id: id}, {
+                req.body.status = 'Paid'
+                await Orders.updateOne({ _id: id }, {
                     $set: req.body
                 });
-                let message = '';
-                if (order.user.password) {
-                    message = '<div style="display: flex; justify-content: center;">';
-                    message = '<div style="border-radius: 8px; background-color: #fff; padding: 20px 30px; text-align: center; box-shadow: 0px 9px 27px 0px rgba(0, 0, 0, 0.16); margin-top: 10px; max-width: 400px;">'
-                    message += '<h2 style="font-weight: 700; text-decoration: underline; text-align:center">Order Processing</h2><br>';
-                    message += `<h3><b>Dear ${order.user.name}!</b></h3><br>` +
-                        `<p style="text-align: left;">Kindly Login into your Dashboard to continue with payment procedure.</p>`;
-                    message += '<br><p style="text-align: left;"><b>Regards:</b></p><br><p>FRUGAL PACKAGING</p><br>';
-                    message += '</div>'
-                }
-                else {
-                    message = '<div style="display: flex; justify-content: center;">';
-                    message = '<div style="border-radius: 8px; background-color: #fff; padding: 20px 30px; text-align: center; box-shadow: 0px 9px 27px 0px rgba(0, 0, 0, 0.16); margin-top: 10px; max-width: 400px;">'
-                    message += '<h2 style="font-weight: 700; text-decoration: underline; text-align:center">Order Processing</h2><br>';
-                    message += `<h3><b>Dear ${order.user.name}!</b></h3><br>` +
-                        `<p style="text-align: left;">Kindly visit this link and set your password to continue with your order procedure.</p>`;
-                    message += `<a style="background-color: red; padding: 10px 20px; color: #fff; outline: none;" href="${process.env.USER_BASE_URL}/password/${order.user._id}?token=${order.user.token}" target="_blank">Click Here</a>`
-                    message += '<br><p style="text-align: left;"><b>Regards:</b></p><br><p>FRUGAL PACKAGING</p><br>';
-                    message += '</div>'
-                }
-                const msg = {
-                    to: order.user.email,
-                    from: process.env.SENDER_EMAIL,
-                    subject: `PERFUME APP: Order Processing`,
-                    text: message,
-                    html: message
-                };
-                await sgMail.send(msg);
                 return res.status(200).json({
                     status: 'Successful',
-                    message: 'Email sent successfully to user to proceed for the order'
+                    message: 'Your order has been successfully placed.'
                 });
             } else {
                 return res.status(403).json({
@@ -183,6 +142,42 @@ module.exports = {
                 status: 'Error',
                 message: error.message
             })
+        }
+    },
+    Pay: async (req, res) => {
+        try {
+            const id = req.params.id;
+            let order = {};
+            order = await Orders.findOne({_id: id});
+            if ( !order ) {
+                return res.status(403).json({
+                    status: 'Failed',
+                    message: 'No such order exist'
+                });
+            }
+            const payment = await stripe.charges.create({
+                amount: order.amount * 100,
+                description: 'Paying for FYP E-commerce for order ID: ' + id,
+                currency: 'usd',
+                source: req.body.token
+            });
+            await Orders.updateOne({ _id: id }, {
+                $set: {
+                    transactionObject: payment,
+                    status: 'Paid'
+                }
+            });
+            order = await Orders.findOne({_id: id});
+            return res.status(200).json({
+                status: 'Successful',
+                message: 'Successfully payed for your order',
+                data: order
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'Error',
+                message: error.message
+            });
         }
     }
 }

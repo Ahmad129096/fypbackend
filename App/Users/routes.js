@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/', Controller.Create);
 router.post('/login', Controller.Login);
-router.get('/', middleware.authentication, Controller.List);
+router.get('/', middleware.adminAuthentication, Controller.List);
 router.patch('/password/set/:id', Controller.SetPassword);
 router.get('/:id', middleware.authentication, Controller.Read);
 router.patch('/:id', middleware.authentication, Controller.Update);

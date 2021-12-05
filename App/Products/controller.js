@@ -1,11 +1,10 @@
 const Product = require('./model');
 
-
-
 module.exports = {
     Create: async (req, res) => {
         try {
             let product = {};
+            req.body.vendor = req.decoded._id;
             product = await Product.create(req.body);
     
             return res.status(200).json({
@@ -46,9 +45,11 @@ module.exports = {
     Update: async (req, res) => {
         try {
             const id = req.params.id;
-            product = await Product.findOneAndUpdate({_id: id}, {
+            let product = {};
+            await Product.updateOne({_id: id}, {
                 $set: req.body
             });
+            product = await Product.findOne({_id: id});
             return res.status(200).json({
                 status: 'Successful',
                 message: 'Successfully updated product',
@@ -132,9 +133,150 @@ module.exports = {
                 message: error.message
             });
         }
+    },
+    ProductsBySubCategory: async (req, res) => {
+        try {
+            let products = [];
+            products = await Product.find({subCategory: req.query.subCategory});
+            return res.status(200).json({
+                status: 'Successful',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'Error',
+                message: error.message
+            });
+        }
+    },
+    ProductsByVendor: async (req, res) => {
+        try {
+            const id = req.params.id;
+            let products = [];
+            products = await Product.find({vendor: id});
+            return res.status(200).json({
+                status: 'Successful',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'Error',
+                message: error.message
+            });
+        }
+    },
+    AdvanceSearch: async (req, res) => {
+        try {
+            let {
+                category,
+                subCategory,
+                vendor,
+                minPrice,
+                maxPrice,
+                minRating,
+                maxRating
+            } = req.query;
+            
+            let products = [];
+            let queryObject = {};
+
+            minPrice = parseFloat(minPrice);
+            maxPrice = parseFloat(maxPrice);
+            minRating = parseFloat(minRating);
+            maxRating = parseFloat(maxRating);
+
+            if (category) {
+                queryObject.category = category;
+            }
+            if (subCategory) {
+                queryObject.subCategory = subCategory;
+            }
+            if (vendor) {
+                queryObject.vendor = vendor;
+            }
+            if (minPrice && maxPrice) {
+                queryObject.price = {
+                    '$gte': minPrice,
+                    '$lte': maxPrice
+                }
+            } else if (maxPrice) {
+                queryObject.price = {
+                    '$lte': maxPrice
+                }
+            } else if (minPrice) {
+                queryObject.price = {
+                    '$gte': minPrice
+                }
+            }
+            if (minRating && maxRating) {
+                queryObject = {
+                    ...queryObject,
+                    'ratings.value': {
+                        '$gte': minRating,
+                        '$lte': maxRating
+                    }
+                }
+            } else if (maxRating) {
+                queryObject = {
+                    ...queryObject,
+                    'ratings.value': {
+                        '$lte': maxRating
+                    }
+                }
+            } else if (minRating) {
+                queryObject = {
+                    ...queryObject,
+                    'ratings.value': {
+                        '$gte': minRating
+                    }
+                }
+            }
+            products = await Product.find(queryObject);
+            return res.status(200).json({
+                status: 'Successful',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'Error',
+                message: error.message
+            });
+        }
+    },
+    Ratings: async (req, res) => {
+        try {
+            let product = {};
+            product = await Product.findOne({
+                'ratings.users': req.decoded._id
+            });
+            if (product) {
+                await Product.updateOne({_id: req.params.id}, {
+                    $set: {
+                        'ratings.value': (product.ratings.value + req.body.rating) / product.ratings.users.length
+                    }
+                });
+            } else {
+                product = await Product.findOne({_id: req.params.id});
+                await Product.updateOne({_id: req.params.id}, {
+                    $push: {
+                        'ratings.users': req.decoded._id
+                    },
+                    $set: {
+                        'ratings.value': (product.ratings.value + req.body.rating) / (product.ratings.users.length + 1)
+                    }
+                });
+            }
+            product = await Product.findOne({_id: req.params.id});
+            return res.status(200).json({
+                status: 'Successful',
+                message: 'Rating successfully updated',
+                data: product
+            })
+        } catch (error) {
+            return res.status(500).json({
+                status: 'Error',
+                message: error.message
+            });
+        }
     }
 }
-
-
-
-

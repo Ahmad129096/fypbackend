@@ -18,7 +18,14 @@ const AdminUserModel = new Schema({
         type: String,
         trim: true
     },
-
+    address: {
+        type: String,
+        trim: true
+    },
+    phoneNumber: {
+        type: String,
+        trim: true
+    },
     password: {
         type: String,
         trim: true

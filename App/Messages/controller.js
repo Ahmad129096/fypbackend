@@ -1,23 +1,24 @@
 const Messages = require('./model');
 
-const Chats = require('../Chat/controller');
+const Chats = require('../Chat/model');
 
 module.exports = {
     Create: async (req, res) => {
         try {
-            let messages = {};
-            messages = await Messages.create(req.body);
+            let message = {};
+            message = await Messages.create(req.body);
             await Chats.updateOne({
                 _id: req.body.chatId
             }, {
                 $push: {
-                    messages: messages
+                    messages: message
                 }
             });
+            message = await Messages.findOne({_id: message.id});
             return res.status(200).json({
                 status: 'Successful',
-                message: 'Successfully registered a messages',
-                data: messages
+                message: 'Successfully sent a messages',
+                data: message
             });
 
         } catch (error) {
@@ -46,9 +47,11 @@ module.exports = {
     Update: async (req, res) => {
         try {
             const id = req.params.id;
-            messages = await Messages.findOneAndUpdate({ _id: id }, {
+            let message = {};
+            message = await Messages.updateOne({ _id: id }, {
                 $set: req.body
             });
+            message = await Messages.findOne({ _id: id });
             return res.status(200).json({
                 status: 'Successful',
                 message: 'Successfully updated messages',

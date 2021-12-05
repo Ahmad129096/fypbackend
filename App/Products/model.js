@@ -3,21 +3,20 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const ProductModel = new Schema({
+    vendor: {
+        type: Schema.Types.ObjectId,
+        ref: 'Vendor'
+    },
     name:{
         type: String,
         trim: true,
         required: true
     },
-    chineseName: {
-        type: String,
-        trim: true,
-        required: true
-    },
-    description: {
+    shortDescription: {
         type: String,
         trim: true
     },
-    chineseDescription: {
+    description: {
         type: String,
         trim: true
     },
@@ -25,19 +24,18 @@ const ProductModel = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Category'
     },
+    subCategory: {
+        type: Schema.Types.ObjectId,
+        ref: 'SubCategory'
+    },
     productCollection: {
         type: Schema.Types.ObjectId,
         ref: 'ProductCollection'
     },
     price:{
-        type: String,
-        trim: true
+        type: Number
     },
     specs:[{
-        type: String,
-        trim: true
-    }],
-    chineseSpecs:[{
         type: String,
         trim: true
     }],
@@ -55,6 +53,16 @@ const ProductModel = new Schema({
     },
     stock: {
         type: Number
+    },
+    ratings: {
+        users: [{
+            type: String,
+            trim: true
+        }],
+        value: {
+            type: Number,
+            default: 0
+        }
     }
 }, {
     timestamps: true
@@ -63,6 +71,8 @@ const ProductModel = new Schema({
 const autoPopulate = function (next) {
     this.populate('productCollection');
     this.populate('category');
+    this.populate('subCategory');
+    this.populate('vendor');
     next();
 }
 ProductModel

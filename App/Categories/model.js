@@ -8,18 +8,25 @@ const CategoryModel = new Schema({
         trim: true,
         required: true
     },
-    chineseName: {
-        type: String,
-        trim: true
-    },
     isDeleted:{
         type: Boolean,
         default: false
-    }
+    },
+    subCategories: [{
+        type: Schema.Types.ObjectId,
+        ref: 'SubCategory'
+    }]
 }, {
     timestamps: true
 });
 
+const autoPopulate = function (next) {
+    this.populate('subCategories');
+    next();
+}
+CategoryModel
+      .pre('find', autoPopulate)
+      .pre('findOne', autoPopulate)
 
 
 module.exports = mongoose.model('Category', CategoryModel);

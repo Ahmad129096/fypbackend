@@ -1,8 +1,6 @@
 const Users = require('./model');
 const jwt = require("jsonwebtoken");
 
-
-
 const bcrypt = require('bcryptjs');
 
 module.exports = {
@@ -10,26 +8,60 @@ module.exports = {
         try {
             let user = {};
             let token = "";
-
+            const { email, phoneNumber, username } = req.body;
+            if (!email) {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errEmail: 'Email not supplied'
+                });
+            }
+            if (!phoneNumber) {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errPhone: 'Phone Number not supplied'
+                });
+            }
+            if (!username) {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errUsername: 'Username not supplied'
+                });
+            }
+            user = await Users.findOne({ email: email }, { password: 0 });
+            if (user) {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errEmail: 'Email already taken'
+                });
+            }
+            user = await Users.findOne({ phoneNumber: phoneNumber }, { password: 0 });
+            if (user) {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errPhone: 'Phone Number already taken'
+                });
+            }
+            user = await Users.findOne({ username: username }, { password: 0 });
+            if (user) {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errUsername: 'Username already taken'
+                });
+            }
             user = await Users.create(req.body);
-
-
             token = jwt.sign({ _id: user.id.toString() },
                 process.env.TOKEN_SECRET
             );
             await Users.updateOne({ _id: user.id }, {
                 token: token
             });
-
             user.token = token;
-
+            user.password = undefined;
             return res.status(200).json({
                 status: 'Successful',
                 message: 'Successfully registered a user',
                 data: user
             });
-
-
         } catch (error) {
             return res.status(500).json({
                 status: 'Error',
@@ -85,8 +117,12 @@ module.exports = {
     Update: async (req, res) => {
         try {
             const id = req.params.id;
-            user = await Users.findOneAndUpdate({ _id: id }, {
+            let user = {};
+            await Users.updateOne({ _id: id }, {
                 $set: req.body
+            });
+            user = await Users.findOne({ _id: id }, {
+                password: 0
             });
             return res.status(200).json({
                 status: 'Successful',

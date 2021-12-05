@@ -7,9 +7,9 @@ const MessagesModel = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
-    agent: {
+    vendor: {
         type: Schema.Types.ObjectId,
-        ref: 'AgentUser'
+        ref: 'Vendor'
     },
     text: {
         type: String,
@@ -35,9 +35,8 @@ const MessagesModel = new Schema({
 });
 
 const autoPopulate = function (next) {
-    this.populate('agent');
-    this.populate('user');
-
+    this.populate('vendor', '-password');
+    this.populate('user', '-password');
     next();
 }
 MessagesModel

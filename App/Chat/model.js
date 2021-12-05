@@ -7,21 +7,21 @@ const ChatModel = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
-    agent: {
+    vendor: {
         type: Schema.Types.ObjectId,
-        ref: 'AgentUser'
+        ref: 'Vendor'
     },
-    messages: {
+    messages: [{
         type: Schema.Types.ObjectId,
         ref: 'Messages'
-    }
+    }]
 }, {
     timestamps: true
 });
 
 const autoPopulate = function (next) {
-    this.populate('agent');
-    this.populate('user');
+    this.populate('vendor', '-password');
+    this.populate('user', '-password');
     this.populate('messages');
     next();
 }

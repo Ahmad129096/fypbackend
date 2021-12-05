@@ -44,11 +44,15 @@ app.use(session({
 app.use('/api/users', Routes.users);
 app.use('/api/admin', Routes.admins);
 app.use('/api/categories', Routes.categories );
+app.use('/api/subcategories', Routes.subCategories );
 app.use('/api/collections', Routes.collections );
 app.use('/api/products', Routes.products );
 app.use('/api/chats', Routes.chats );
 app.use('/api/messages', Routes.messages );
 app.use('/api/orders', Routes.orders);
+app.use('/api/news', Routes.news);
+app.use('/api/vendors', Routes.vendors);
+
 
 //API's Initialization through routers
 

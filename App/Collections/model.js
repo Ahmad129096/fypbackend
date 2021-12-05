@@ -8,10 +8,6 @@ const CollectionModel = new Schema({
         trim: true,
         required: true
     },
-    chineseName: {
-        type: String,
-        trim: true
-    },
     isDeleted:{
         type: Boolean,
         default: false
