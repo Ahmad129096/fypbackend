@@ -1,5 +1,6 @@
 const Users = require('./model');
 const jwt = require("jsonwebtoken");
+const emailvalidator = require("email-validator");
 
 const bcrypt = require('bcryptjs');
 
@@ -8,6 +9,7 @@ module.exports = {
         try {
             let user = {};
             let token = "";
+            
             const { email, phoneNumber, username } = req.body;
             if (!email) {
                 return res.status(404).json({
@@ -15,6 +17,15 @@ module.exports = {
                     errEmail: 'Email not supplied'
                 });
             }
+            if(!emailvalidator.validate(email))
+            {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errEmail: 'Invalid Email'
+                });
+            }
+
+
             if (!phoneNumber) {
                 return res.status(404).json({
                     status: 'Failed',
@@ -48,6 +59,7 @@ module.exports = {
                     errUsername: 'Username already taken'
                 });
             }
+
             user = await Users.create(req.body);
             token = jwt.sign({ _id: user.id.toString() },
                 process.env.TOKEN_SECRET

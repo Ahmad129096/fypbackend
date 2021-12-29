@@ -9,7 +9,7 @@ const ChatModel = new Schema({
     },
     vendor: {
         type: Schema.Types.ObjectId,
-        ref: 'Vendor'
+        ref: 'User'
     },
     messages: [{
         type: Schema.Types.ObjectId,

@@ -4,12 +4,12 @@ module.exports = {
     Create: async (req, res) => {
         try {
             let product = {};
-            req.body.vendor = req.decoded._id;
+            req.body.user = req.decoded._id;
             product = await Product.create(req.body);
     
             return res.status(200).json({
                 status: 'Successful',
-                message: 'Successfully registered a product',
+                message: 'Successfully registered a Pet',
                 data: product
             });
 
@@ -28,7 +28,7 @@ module.exports = {
             if(product.isDeleted) {
                 return res.status(403).json({
                     status: "Failed",
-                    message: "No such product exist"
+                    message: "No such Pet exist"
                 });
             }
             return res.status(200).json({
@@ -52,7 +52,7 @@ module.exports = {
             product = await Product.findOne({_id: id});
             return res.status(200).json({
                 status: 'Successful',
-                message: 'Successfully updated product',
+                message: 'Successfully updated Pet',
                 data: product
             });
         } catch (error) {
@@ -72,7 +72,7 @@ module.exports = {
             });
             return res.status(200).json({
                 status: 'Successful',
-                message: 'Successfully Deleted product'
+                message: 'Successfully Deleted Pet'
             });
         } catch (error) {
             return res.status(500).json({
@@ -103,7 +103,7 @@ module.exports = {
             let topSellings = [], newArrivals = [], uniqueProducts = [];
             topSellings = await Product.find({type: 'Top Selling'});
             newArrivals = await Product.find({type: 'New Arrivals'});
-            uniqueProducts = await Product.find({type: 'Unique Products'});
+            uniqueProducts = await Product.find({type: 'Unique Pets'});
             return res.status(200).json({
                 status: 'Successful',
                 data: {
@@ -153,7 +153,7 @@ module.exports = {
         try {
             const id = req.params.id;
             let products = [];
-            products = await Product.find({vendor: id});
+            products = await Product.find({user: id});
             return res.status(200).json({
                 status: 'Successful',
                 data: products
@@ -170,7 +170,7 @@ module.exports = {
             let {
                 category,
                 subCategory,
-                vendor,
+                user,
                 minPrice,
                 maxPrice,
                 minRating,
@@ -191,8 +191,8 @@ module.exports = {
             if (subCategory) {
                 queryObject.subCategory = subCategory;
             }
-            if (vendor) {
-                queryObject.vendor = vendor;
+            if (user) {
+                queryObject.user = user;
             }
             if (minPrice && maxPrice) {
                 queryObject.price = {

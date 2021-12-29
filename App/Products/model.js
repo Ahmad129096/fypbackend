@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const ProductModel = new Schema({
-    vendor: {
+    user: {
         type: Schema.Types.ObjectId,
-        ref: 'Vendor'
+        ref: 'User'
     },
     name:{
         type: String,
@@ -72,7 +72,7 @@ const autoPopulate = function (next) {
     this.populate('productCollection');
     this.populate('category');
     this.populate('subCategory');
-    this.populate('vendor');
+    this.populate('user');
     next();
 }
 ProductModel

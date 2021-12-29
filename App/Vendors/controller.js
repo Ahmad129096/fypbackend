@@ -2,6 +2,7 @@ const Vendors = require('./model');
 const jwt = require("jsonwebtoken");
 
 const bcrypt = require('bcryptjs');
+const emailvalidator = require("email-validator");
 
 module.exports = {
     Create: async (req, res) => {
@@ -9,10 +10,18 @@ module.exports = {
             let vendor = {};
             let token = "";
             const { email, phoneNumber, username } = req.body;
-            if (!email) {
+            const emailvalidator = require("email-validator");
+            if (!email ) {
                 return res.status(404).json({
                     status: 'Failed',
                     errEmail: 'Email not supplied'
+                });
+            }
+            if(!emailvalidator.validate(email))
+            {
+                return res.status(404).json({
+                    status: 'Failed',
+                    errEmail: 'Invalid Email'
                 });
             }
             if (!phoneNumber) {

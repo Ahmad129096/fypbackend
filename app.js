@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const environment = require('dotenv');
 const cors = require('cors');
 
+
 const Routes = require('./Routes/index.js');
 
 environment.config();
@@ -52,7 +53,6 @@ app.use('/api/messages', Routes.messages );
 app.use('/api/orders', Routes.orders);
 app.use('/api/news', Routes.news);
 app.use('/api/vendors', Routes.vendors);
-
 
 //API's Initialization through routers
 

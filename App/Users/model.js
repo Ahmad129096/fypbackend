@@ -78,6 +78,10 @@ const UserModel = new Schema({
     address: {
         type: String,
         trim: true
+    },
+    isDeactived:{
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
